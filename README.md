@@ -10,3 +10,6 @@ How to open the project:\n
 
 \n\n
 Note: The game was made on a windows machine. It should work fine on OSX but I had no chance to test it.
+\n\n
+Additional features:\n
+- Level Editor including load and save system
