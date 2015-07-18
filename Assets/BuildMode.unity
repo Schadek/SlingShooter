@@ -668,8 +668,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cursorJointPrefab: {fileID: 105606, guid: e5bf9d1a6a1549648aa2bf63e3879dcc, type: 2}
-  explosion: {fileID: 149562, guid: 4a3eeaa1e1022344ba66817488b0edaa, type: 2}
-  explosionOffset: {x: -.649999976, y: .649999976, z: 0}
   errorText: {fileID: 2110224272}
   errorGroup: {fileID: 543298091}
   leaveGroup: {fileID: 1395760165}
@@ -1328,10 +1326,10 @@ MonoBehaviour:
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: To place new blocks just drag the piece you like from the bar on the left
-    into the scene. With the buttons on top you can switch to placing enemies and
-    birds. With the button in the middle you can change the material of the blocks
-    if they exist. With the rightmost button you can return to the main menu to playtest
-    your level.
+    into the scene. With the buttons on top you can switch to placing enemies. (Birds
+    are not supported currently.) With the button in the middle you can change the
+    material of the block if it exists. With the rightmost button you can return to
+    the main menu to playtest your level.
 --- !u!222 &462520442
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3311,6 +3309,7 @@ MonoBehaviour:
   - {fileID: 26004321}
   - {fileID: 1395760163}
   forceIntro: 0
+  clearPrefsOnStart: 1
 --- !u!1 &1082149505
 GameObject:
   m_ObjectHideFlags: 0
@@ -5783,8 +5782,7 @@ MonoBehaviour:
   - {fileID: 189388, guid: 3b2db05877cd1e5498b12f712bff7959, type: 2}
   - {fileID: 189388, guid: ae8809234e7d0f14ab7c11cff6285e60, type: 2}
   - {fileID: 189388, guid: c134e9625c179774c90fdb3657a6f2f7, type: 2}
-  birds:
-  - {fileID: 169488, guid: 46e53b64ec312374d866f39cecc6d0b7, type: 2}
+  birds: []
   woodToIce: {fileID: 21300000, guid: 143f338ff22219d4a974db8465080422, type: 3}
   IceToStone: {fileID: 21300000, guid: 3a22a1800db355845a1d63a30d598919, type: 3}
   StoneToWood: {fileID: 21300000, guid: ce3f990fa59631a449796e6cb0098ef0, type: 3}

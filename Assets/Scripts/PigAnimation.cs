@@ -25,6 +25,9 @@ public class PigAnimation : MonoBehaviour
     public SpriteRenderer icon;
     public ParticleSystem pSystem;
     public AudioSource aSource;
+    [Space(10)]
+    public GameObject explosion;
+    public Vector3 explosionOffset;
 
     //[HideInInspector]
     public bool isIngame;
@@ -162,18 +165,23 @@ public class PigAnimation : MonoBehaviour
 
     public void OnDeath()
     {
-        aSource.clip = die;
-        aSource.Play();
+        if (isIngame)
+        {
+            SoundSource.Instance.PlaySound(die);
+        }
+        else
+        {
+            aSource.clip = die;
+            aSource.Play();
+        }
 
         if (isIngame)
         {
             sceneInfo.enemies.Remove(gameObject);
             Destroy(gameObject);
         }
-        else
-        {
-            Instantiate(UtilityFunctions.Instance.explosion, transform.position + UtilityFunctions.Instance.explosionOffset, Quaternion.identity);
-        }
+
+        Instantiate(explosion, transform.position + explosionOffset, Quaternion.identity);
 
         //We need to unsubscribe
         UtilityFunctions.levelPurge -= OnDeath;

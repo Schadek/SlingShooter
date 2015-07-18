@@ -11,6 +11,10 @@ public class SceneInformation : MonoBehaviour
     public List<GameObject> enemies;
     public List<GameObject> birds;
     public List<GameObject> projectiles;
+    public Rigidbody2D currentProjectile;
+    public LineRenderer currentLineRenderer;
+
+    public static bool allEnemiesDead;
 
     private void Awake()
     {
@@ -31,11 +35,29 @@ public class SceneInformation : MonoBehaviour
         UtilityFunctions.NullifyPurgeLevel();
     }
 
-    private void Update()
+    public void StartWinningCondition()
     {
-        if (enemies.Count == 0)
+        StartCoroutine(WinningCondition());
+    }
+
+    private IEnumerator WinningCondition()
+    {
+        while (true)
         {
-            LoadScene.Instance.ReturnToLoadScene();
+            if (enemies.Count == 0)
+            {
+                allEnemiesDead = true;
+                LoadScene.Instance.clearedGroup.Activate();
+                yield return StartCoroutine(AllEnemiesDead());
+                break;
+            }
+            yield return null;
         }
+    }
+
+    private IEnumerator AllEnemiesDead()
+    {
+        yield return new WaitForSeconds(2f);
+        LoadScene.Instance.ReturnToLoadScene();
     }
 }

@@ -10,11 +10,17 @@ public class Introduction : MonoBehaviour
     public GameObject[] uiToActivate;
     [Space(10)]
     public bool forceIntro;
+    public bool clearPrefsOnStart;
 
     private int currentSlideIndex;
 
     private void Awake()
     {
+        if (clearPrefsOnStart)
+        {
+            PlayerPrefs.DeleteAll();
+        }
+
         if (!forceIntro)
         {
             //Check if the introduction already has been viewed

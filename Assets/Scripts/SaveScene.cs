@@ -31,7 +31,7 @@ public class SaveScene : MonoBehaviour
         }
         else
         {
-            path = Application.productName + "/Maps";
+            path = Application.productName + "_Data/Maps";
         }
 
         if (!Directory.Exists(path))
@@ -131,7 +131,7 @@ public class SaveScene : MonoBehaviour
         }
         else
         {
-            path = Application.productName + "/Maps/" + name + ".txt";
+            path = Application.productName + "_Data/Maps/" + name + ".txt";
         }
 
         if (File.Exists(path))
@@ -184,7 +184,7 @@ public class SaveScene : MonoBehaviour
         }
         else
         {
-            path = Application.productName + "/Maps/" + name + ".txt";
+            path = Application.productName + "_Data/Maps/" + name + ".txt";
         }
 
         //Finally we write all lines to the file and close the save UI

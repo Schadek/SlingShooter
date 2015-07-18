@@ -183,6 +183,10 @@ MonoBehaviour:
   icon: {fileID: 21225838}
   pSystem: {fileID: 19887834}
   aSource: {fileID: 8247248}
+  explosion: {fileID: 149562, guid: 4a3eeaa1e1022344ba66817488b0edaa, type: 2}
+  explosionOffset: {x: -.649999976, y: .649999976, z: 0}
+  isIngame: 0
+  sceneInfo: {fileID: 0}
 --- !u!114 &11440130
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1405,6 +1409,18 @@ Prefab:
     - target: {fileID: 0}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: explosion
+      value: 
+      objectReference: {fileID: 149562, guid: 4a3eeaa1e1022344ba66817488b0edaa, type: 2}
+    - target: {fileID: 0}
+      propertyPath: explosionOffset.x
+      value: -.649999976
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: explosionOffset.y
+      value: .649999976
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 0}

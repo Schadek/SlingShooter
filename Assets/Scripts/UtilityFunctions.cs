@@ -5,8 +5,6 @@ using System.Collections;
 public class UtilityFunctions : MonoBehaviour
 {
     public GameObject cursorJointPrefab;
-    public GameObject explosion;
-    public Vector3 explosionOffset;
     [Space(10)]
     public Text errorText;
     public CanvasGroup errorGroup;

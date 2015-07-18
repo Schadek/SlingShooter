@@ -42,6 +42,11 @@ public class Slingshot : MonoBehaviour
         // Player pressed mouse while over Slingshot
         aimingMode = true;
 
+        if (SceneInformation.Instance.currentProjectile)
+        {
+            SceneInformation.Instance.currentProjectile = null;
+        }
+
         // Instantiate a projectile
         projectile = Instantiate(prefabProjectile) as GameObject;
 
@@ -75,6 +80,13 @@ public class Slingshot : MonoBehaviour
 
         if (Input.GetMouseButtonUp(0))
         {
+            //If there is a line renderer in the scene, delete it
+            if (SceneInformation.Instance.currentLineRenderer)
+            {
+                Destroy(SceneInformation.Instance.currentLineRenderer.GetComponent<ProjectileLine>());
+                Destroy(SceneInformation.Instance.currentLineRenderer);
+            }
+
             // The mouse has been released
             aimingMode = false;
             // Fire off the projectile with given velocity
@@ -82,8 +94,8 @@ public class Slingshot : MonoBehaviour
             projectile.GetComponent<Rigidbody2D>().velocity = -mouseDelta * velocityMult;
 
             SceneInformation.Instance.allObjects.Add(projectile);
-
-            // Set the Followcam's target to our projectile
+            SceneInformation.Instance.currentProjectile = projectile.GetComponent<Rigidbody2D>();
+            SceneInformation.Instance.currentLineRenderer = projectile.GetComponentInChildren<LineRenderer>();
 
             // Set the reference to the projectile to null as early as possible
             projectile = null;

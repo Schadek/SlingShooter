@@ -14,6 +14,8 @@ public class LoadScene : MonoBehaviour
     [Space(10)]
     public CanvasGroup loadGroup;
     public CanvasGroup ingameUI;
+    public CanvasGroup clearedGroup;
+    public CanvasGroup titleGroup;
 
     public GameObject[] blocks;
     public GameObject[] enemies;
@@ -33,6 +35,8 @@ public class LoadScene : MonoBehaviour
 
         //Deactivate the ingame UI. We activate it again later.
         ingameUI.Deactivate();
+        clearedGroup.Deactivate();
+        titleGroup.Activate();
     }
 
     private void ReadSceneNames()
@@ -44,7 +48,7 @@ public class LoadScene : MonoBehaviour
         }
         else
         {
-            path = Application.productName + "/Maps";
+            path = Application.productName + "_Data/Maps";
         }
 
         sceneNames = Directory.GetFiles(path, "*.txt");
@@ -67,6 +71,7 @@ public class LoadScene : MonoBehaviour
             //Because GetFiles returns complete paths relative to the invoker we have to give the text component a cleaned up version
             string cleanedUpName = sceneNames[i];
             cleanedUpName = cleanedUpName.Substring(cleanedUpName.LastIndexOf("\\") + 1);
+            cleanedUpName = cleanedUpName.Remove(cleanedUpName.Length - 4);
 
             tmpText.text = cleanedUpName;
             tmpRect.SetParent(contentPanel);
@@ -81,6 +86,10 @@ public class LoadScene : MonoBehaviour
         ParseScene(tmpLines);
         loadGroup.Deactivate();
         ingameUI.Activate();
+
+        //We start the coroutine to check for a win 
+        sceneInfo.StartWinningCondition();
+        titleGroup.Deactivate();
     }
 
     private void ParseScene(string[] lines)
@@ -234,6 +243,12 @@ public class LoadScene : MonoBehaviour
     public void ReturnToLoadScene()
     {
         loadGroup.Activate();
+        ingameUI.Deactivate();
+        clearedGroup.Deactivate();
+        titleGroup.Activate();
+
         sceneInfo.ClearScene();
+
+        sceneInfo.StopAllCoroutines();
     }
 }
