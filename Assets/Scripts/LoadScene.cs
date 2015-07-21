@@ -15,13 +15,15 @@ public class LoadScene : MonoBehaviour
     public CanvasGroup loadGroup;
     public CanvasGroup ingameUI;
     public CanvasGroup clearedGroup;
+    public CanvasGroup noBirdsGroup;
     public CanvasGroup titleGroup;
+    public CanvasGroup soundGroup;
 
     public GameObject[] blocks;
     public GameObject[] enemies;
     public GameObject[] birds;
     [Space(10)]
-    public GameObject projectilePrefab;
+    public GameObject lineRendererPrefab;
 
     private string[] sceneNames;
     public static LoadScene Instance;
@@ -36,7 +38,9 @@ public class LoadScene : MonoBehaviour
         //Deactivate the ingame UI. We activate it again later.
         ingameUI.Deactivate();
         clearedGroup.Deactivate();
+        noBirdsGroup.Deactivate();
         titleGroup.Activate();
+        ReturnToLoadScene();
     }
 
     private void ReadSceneNames()
@@ -57,6 +61,9 @@ public class LoadScene : MonoBehaviour
     private void ShowLevelSelection()
     {
         float overallHeight = 0f;
+        VerticalLayoutGroup tmpLayout = contentPanel.GetComponent<VerticalLayoutGroup>();
+
+        overallHeight += tmpLayout.padding.top + tmpLayout.padding.bottom + sceneNames.Length * tmpLayout.spacing;
 
         contentPanel.sizeDelta = new Vector2(selectionMask.sizeDelta.x, 0);
         for (int i = 0; i < sceneNames.Length; i++)
@@ -65,8 +72,9 @@ public class LoadScene : MonoBehaviour
             Button tmpButton = tmpRect.GetComponentInChildren<Button>();
             Text tmpText = tmpRect.GetComponentInChildren<Text>();
 
-            int heapI = i;
-            tmpButton.onClick.AddListener(() => { LoadAt(heapI); });
+            //Closures are great
+            int closureI = i;
+            tmpButton.onClick.AddListener(() => { LoadAt(closureI); });
 
             //Because GetFiles returns complete paths relative to the invoker we have to give the text component a cleaned up version
             string cleanedUpName = sceneNames[i];
@@ -88,23 +96,17 @@ public class LoadScene : MonoBehaviour
         ingameUI.Activate();
 
         //We start the coroutine to check for a win 
-        sceneInfo.StartWinningCondition();
+        sceneInfo.StartConditions();
         titleGroup.Deactivate();
+        soundGroup.Deactivate();
     }
 
     private void ParseScene(string[] lines)
     {
-        int numberOfBlocks = 0;
-
-        for (int i = 0; i < lines.Length; i++)
-        {
-            if (lines[i] == "ENEMIES")
-            {
-                numberOfBlocks = (i - 1) / 5;
-            }
-        }
-
         int currentLine = 1;
+        int numberOfBlocks = int.Parse(lines[currentLine]);
+        currentLine++;
+
         for (int i = 0; i < numberOfBlocks; i++)
         {
             GameObject tmpObject = null;
@@ -116,13 +118,15 @@ public class LoadScene : MonoBehaviour
                 if (blocks[k].name == lines[currentLine])
                 {
                     tmpObject = Instantiate(blocks[k]);
-
                     tmpObject.name = lines[currentLine];
                     prefabIndex = k;
                     currentLine++;
                     break;
                 }
             }
+
+            //Set the rigidbodies kinematic
+            tmpObject.GetComponent<Rigidbody2D>().isKinematic = false;
 
             //Define Material
             switch (lines[currentLine])
@@ -140,44 +144,66 @@ public class LoadScene : MonoBehaviour
             currentLine++;
 
             //Define position
-            float posX;
-            float.TryParse(lines[currentLine], out posX);
+            float posX = float.Parse(lines[currentLine]);
             currentLine++;
-            float posY;
-            float.TryParse(lines[currentLine], out posY);
+            float posY = float.Parse(lines[currentLine]);
             currentLine++;
-            float rotZ;
-            float.TryParse(lines[currentLine], out rotZ);
+            float rotZ = float.Parse(lines[currentLine]);
             currentLine++;
 
             //Apply information
             tmpObject.transform.position = new Vector3(posX, posY, 0f);
             tmpObject.transform.rotation = Quaternion.Euler(0f, 0f, rotZ);
 
-            //Set the rigidbodies kinematic
-            tmpObject.GetComponent<Rigidbody2D>().isKinematic = false;
+            //Exception for sling
+            if (tmpObject.name == "Sling")
+            {
+                tmpObject.GetComponent<SpriteRenderer>().sprite = tmpObject.GetComponent<BuildingBlockInfo>().foreGroundSprite;
+                Destroy(tmpObject.GetComponent<BoxCollider2D>());
+                Destroy(tmpObject.GetComponent<Rigidbody2D>());
+                tmpObject.GetComponent<CircleCollider2D>().enabled = true;
+                Slingshot tmpSling = tmpObject.AddComponent<Slingshot>();
+                tmpSling.lineRendererPrefab = lineRendererPrefab;
+
+                //Delete the canvas attached to the sling
+                Destroy(tmpObject.GetComponentInChildren<Canvas>().gameObject);
+
+                int steps = int.Parse(lines[currentLine]);
+                currentLine++;
+
+                //If no first fired slingshot is defined, we take the current one
+                if (!sceneInfo.lastFireSlingshot)
+                {
+                    sceneInfo.lastFireSlingshot = tmpObject.transform;
+                }
+
+                //Look up matching bird prefabs and apply them to the sling
+                for (int k = 0; k < steps; k++)
+                {
+                    for (int j = 0; j < birds.Length; j++)
+                    {
+                        if (birds[j].name == lines[currentLine])
+                        {
+                            sceneInfo.birds.Add(birds[j]);
+                            tmpSling.birds.Add(birds[j]);
+                            currentLine++;
+                        }
+                    }
+                }
+            }
 
             sceneInfo.allObjects.Add(tmpObject);
         }
 
+        currentLine++;
         //Instantiate the enemies
-        int numberOfEnemies = 0;
-
-        for (int i = numberOfBlocks * 5; i < lines.Length; i++)
-        {
-            if (lines[i] == "BIRDS")
-            {
-                numberOfEnemies = ((i - 2) - numberOfBlocks * 5) / 4;
-            }
-        }
+        int numberOfEnemies = int.Parse(lines[currentLine]);
 
         //Reset the previously used variables 
-        //Currently we are at the ENEMIES milestone -> one line further
         currentLine++;
         for (int i = 0; i < numberOfEnemies; i++)
         {
             GameObject tmpObject = null;
-            int prefabIndex = 0;
 
             for (int k = 0; k < enemies.Length; k++)
             {
@@ -185,21 +211,17 @@ public class LoadScene : MonoBehaviour
                 if (enemies[k].name == lines[currentLine])
                 {
                     tmpObject = Instantiate(enemies[k]);
-                    prefabIndex = k;
                     currentLine++;
                     break;
                 }
             }
 
             //Define position
-            float posX;
-            float.TryParse(lines[currentLine], out posX);
+            float posX = float.Parse(lines[currentLine]);
             currentLine++;
-            float posY;
-            float.TryParse(lines[currentLine], out posY);
+            float posY = float.Parse(lines[currentLine]);
             currentLine++;
-            float rotZ;
-            float.TryParse(lines[currentLine], out rotZ);
+            float rotZ = float.Parse(lines[currentLine]);
             currentLine++;
 
             //Apply information
@@ -213,26 +235,6 @@ public class LoadScene : MonoBehaviour
             sceneInfo.enemies.Add(tmpObject);
         }
 
-        //BIRDS ARE NOT SUPPORTED IN THIS VERSION. SORRY MARTIN. 
-
-
-        //We search for each sling and apply special rules to them. We could have avoided the search by applying these
-        //rules directly as we instantiate them but there was a bug and bla
-
-        for (int i = 0; i < sceneInfo.allObjects.Count; i++)
-        {
-            if (sceneInfo.allObjects[i].name == "Sling")
-            {
-                sceneInfo.allObjects[i].GetComponent<SpriteRenderer>().sprite = sceneInfo.allObjects[i].GetComponent<BuildingBlockInfo>().foreGroundSprite;
-                Destroy(sceneInfo.allObjects[i].GetComponent<BoxCollider2D>());
-                Destroy(sceneInfo.allObjects[i].GetComponent<Rigidbody2D>());
-                sceneInfo.allObjects[i].GetComponent<CircleCollider2D>().enabled = true;
-                Slingshot tmpSling = sceneInfo.allObjects[i].AddComponent<Slingshot>();
-                tmpSling.prefabProjectile = projectilePrefab;
-
-            }
-        }
-
         for (int i = 0; i < sceneInfo.enemies.Count; i++)
         {
             sceneInfo.enemies[i].GetComponent<PigAnimation>().isIngame = true;
@@ -242,13 +244,17 @@ public class LoadScene : MonoBehaviour
 
     public void ReturnToLoadScene()
     {
-        loadGroup.Activate();
         ingameUI.Deactivate();
         clearedGroup.Deactivate();
+        noBirdsGroup.Deactivate();
+
         titleGroup.Activate();
+        soundGroup.Activate();
+        loadGroup.Activate();
 
         sceneInfo.ClearScene();
 
         sceneInfo.StopAllCoroutines();
+        sceneInfo.lastFireSlingshot = null;
     }
 }

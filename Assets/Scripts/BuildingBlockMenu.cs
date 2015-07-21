@@ -38,6 +38,7 @@ public class BuildingBlockMenu : MonoBehaviour
     public Sprite bird;
     [Space(10)]
     public Scrollbar scrollBar;
+    public GameObject explosion;
 
     private BuildingBlockGUIInfo[] guiInfos;
 
@@ -223,8 +224,9 @@ public class BuildingBlockMenu : MonoBehaviour
             tmpGUIInfo.icon.SetNativeSize();
 
             //We need to distinguish between birds, blocks and enemies. Therefore we need to add different behaviours for each type.
-            DragEnemy tmpDrag = tmpRect.gameObject.AddComponent<DragEnemy>();
-            tmpDrag.info = tmpRect.GetComponent<BuildingBlockGUIInfo>();
+            DragBird tmpDrag = tmpRect.gameObject.AddComponent<DragBird>();
+            tmpDrag.info = birds[i].GetComponent<BirdInfo>();
+            tmpDrag.explosion = explosion;
         }
         contentPanel.sizeDelta = new Vector2(contentPanel.sizeDelta.x, overallHeight);
     }

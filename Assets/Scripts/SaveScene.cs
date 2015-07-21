@@ -40,14 +40,14 @@ public class SaveScene : MonoBehaviour
         }
     }
 
-    private bool SlingShotInScene()
+    private bool LoadedSlingShotInScene()
     {
         List<Transform> pointer = BuildingBlockMenu.Instance.sceneBlocks;
 
         for (int i = 0; i < pointer.Count; i++)
         {
             //Hardcoding everywhere ;_;
-            if (pointer[i].name == "Sling")
+            if (pointer[i].name == "Sling" && pointer[i].GetComponent<DroppingBirds>().birdList.Count > 0)
             {
                 return true;
             }
@@ -77,19 +77,14 @@ public class SaveScene : MonoBehaviour
     private bool GenerateErrorMessages()
     {
         //First we need to validate that at least one slingshot and one enemy is in the scene. Other throw error.
-        if (!SlingShotInScene())
+        if (!LoadedSlingShotInScene())
         {
-            UtilityFunctions.Instance.DisplayError("There is no slingshot in the scene! You must place at least one for the scene to function properly!");
+            UtilityFunctions.Instance.DisplayError("There is no loaded slingshot in the scene! Place one or load the one(s) you have with birds!");
             return true;
         }
         else if (BuildingBlockMenu.Instance.sceneEnemies.Count == 0)
         {
             UtilityFunctions.Instance.DisplayError("You placed no enemies in the scene! You must place at least one for the scene to function properly!");
-            return true;
-        }
-        else if (BuildingBlockMenu.Instance.sceneEnemies.Count == 0)
-        {
-            UtilityFunctions.Instance.DisplayError("There are no birds assigned to one of the slingshots in the scene. At least one is required.");
             return true;
         }
         return false;
@@ -152,6 +147,9 @@ public class SaveScene : MonoBehaviour
         List<string> allLines = new List<string>();
 
         allLines.Add("BLOCKS");
+        //For easier use we add the total amount of blocks
+        allLines.Add("" + blocks.Count);
+
         foreach (Transform i in blocks)
         {
             allLines.Add(i.name);
@@ -159,6 +157,19 @@ public class SaveScene : MonoBehaviour
             allLines.Add(i.position.x.ToString());
             allLines.Add(i.position.y.ToString());
             allLines.Add(i.rotation.eulerAngles.z.ToString());
+
+            //Exception for sling object
+            if (i.name == "Sling")
+            {
+                DroppingBirds tmpDrop = i.GetComponent<DroppingBirds>();
+
+                //To make things easier we also save the amount of birds attached to the sling (Makes it easier to read the file)
+                allLines.Add("" + tmpDrop.birdList.Count);
+                foreach (GameObject k in tmpDrop.birdList)
+                {
+                    allLines.Add(k.name);
+                }
+            }
         }
         
         /* Structure of file:
@@ -167,6 +178,8 @@ public class SaveScene : MonoBehaviour
          * POS_Y
          * ROT_Z */
         allLines.Add("ENEMIES");
+        allLines.Add("" + enemies.Count);
+
         foreach (Transform i in enemies)
         {
             allLines.Add(i.name);
@@ -175,7 +188,7 @@ public class SaveScene : MonoBehaviour
             allLines.Add(i.rotation.eulerAngles.z.ToString());
         }
 
-        allLines.Add("BIRDS");
+        allLines.Add("END");
 
         string path;
         if (Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.OSXEditor)
@@ -191,6 +204,5 @@ public class SaveScene : MonoBehaviour
         File.WriteAllLines(path, allLines.ToArray());
 
         CloseAllSaveUI();
-
     }
 }

@@ -13,6 +13,7 @@ public class SceneInformation : MonoBehaviour
     public List<GameObject> projectiles;
     public Rigidbody2D currentProjectile;
     public LineRenderer currentLineRenderer;
+    public Transform lastFireSlingshot;
 
     public static bool allEnemiesDead;
 
@@ -35,15 +36,17 @@ public class SceneInformation : MonoBehaviour
         UtilityFunctions.NullifyPurgeLevel();
     }
 
-    public void StartWinningCondition()
+    public void StartConditions()
     {
         StartCoroutine(WinningCondition());
+        StartCoroutine(LosingCondition());
     }
 
     private IEnumerator WinningCondition()
     {
         while (true)
         {
+            yield return new WaitForFixedUpdate();
             if (enemies.Count == 0)
             {
                 allEnemiesDead = true;
@@ -51,8 +54,49 @@ public class SceneInformation : MonoBehaviour
                 yield return StartCoroutine(AllEnemiesDead());
                 break;
             }
-            yield return null;
         }
+    }
+
+    private IEnumerator LosingCondition()
+    {
+        while (true)
+        {
+            yield return new WaitForFixedUpdate();
+            if (birds.Count == 0 && AllProjectilesSleeping() && AllObjectsSleeping())
+            {
+                LoadScene.Instance.noBirdsGroup.Activate();
+                yield return StartCoroutine(AllEnemiesDead());
+                break;
+            }
+        }
+    }
+
+    private bool AllObjectsSleeping()
+    {
+        foreach (GameObject i in allObjects)
+        {
+            Rigidbody2D rBody = i.GetComponent<Rigidbody2D>();
+            if (rBody != null && !rBody.IsSleeping())
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private bool AllProjectilesSleeping()
+    {
+        /*foreach (GameObject i in projectiles)
+        {
+            if (!i.GetComponent<Rigidbody2D>().IsSleeping())
+            {
+                return false;
+            }
+        }
+        return true;*/
+        if (currentProjectile)
+            return currentProjectile.IsSleeping();
+        return true;
     }
 
     private IEnumerator AllEnemiesDead()

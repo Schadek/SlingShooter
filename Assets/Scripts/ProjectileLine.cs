@@ -17,7 +17,9 @@ public class ProjectileLine : MonoBehaviour {
 	void Awake() {
 		// Get a reference to the LineRenderer
 		line = GetComponent<LineRenderer>();
-		line.material = new Material(Shader.Find("Mobile/Particles/Additive"));
+        line.material = new Material(Shader.Find("Particles/Additive"));
+        line.material.hideFlags = HideFlags.None;
+        line.material.shader.hideFlags = HideFlags.None;
 		line.SetColors(Color.white, Color.white);
         line.SetWidth(0.2f, 0.2f);
 		pointsCount = 0;

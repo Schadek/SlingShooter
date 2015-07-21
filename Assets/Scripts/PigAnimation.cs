@@ -25,6 +25,7 @@ public class PigAnimation : MonoBehaviour
     public SpriteRenderer icon;
     public ParticleSystem pSystem;
     public AudioSource aSource;
+    public GameObject soundSourcePrefab;
     [Space(10)]
     public GameObject explosion;
     public Vector3 explosionOffset;
@@ -167,7 +168,8 @@ public class PigAnimation : MonoBehaviour
     {
         if (isIngame)
         {
-            SoundSource.Instance.PlaySound(die);
+            SoundSource tmpSource = Instantiate(soundSourcePrefab).GetComponent<SoundSource>();
+            tmpSource.clip = die;
         }
         else
         {
@@ -178,6 +180,7 @@ public class PigAnimation : MonoBehaviour
         if (isIngame)
         {
             sceneInfo.enemies.Remove(gameObject);
+            sceneInfo.allObjects.Remove(gameObject);
             Destroy(gameObject);
         }
 

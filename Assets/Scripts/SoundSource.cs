@@ -1,21 +1,30 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof(AudioSource))]
 public class SoundSource : MonoBehaviour 
 {
-    public static SoundSource Instance;
     private AudioSource aSource;
+    public AudioClip clip;
 
-    private void Awake()
+    private void Start()
     {
-        Instance = this;
         aSource = GetComponent<AudioSource>();
+        PlaySound();
     }
 
-    public void PlaySound(AudioClip clip)
+    public void PlaySound()
     {
         aSource.clip = clip;
         aSource.Play();
+        StartCoroutine(DestroyAfterPlay());
+    }
+
+    private IEnumerator DestroyAfterPlay()
+    {
+        while (aSource.isPlaying)
+        {
+            yield return null;
+        }
+        Destroy(gameObject);
     }
 }

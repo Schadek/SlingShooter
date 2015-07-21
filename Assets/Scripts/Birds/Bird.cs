@@ -5,6 +5,7 @@ public abstract class Bird : MonoBehaviour
 {
     public float mass;
     public Rigidbody2D rBody;
+    public GameObject prefab;
 
     public abstract void OnGrab();
     public abstract void OnRelease();

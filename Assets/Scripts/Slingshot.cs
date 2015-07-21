@@ -1,18 +1,23 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Slingshot : MonoBehaviour
 {
 
     // Fields set in the Unity Inspector pane
-    public GameObject prefabProjectile;
+    public GameObject lineRendererPrefab;
     public float velocityMult = 20f;
+    public List<GameObject> birds = new List<GameObject>();
 
     // Fields set dynamically
     private GameObject launchPoint;
+    private GameObject[] queueBirds = new GameObject[0];
+
     private Vector3 launchPos;
     private GameObject projectile;
     private bool aimingMode;
+    private Transform birdQueue;
 
     void Awake()
     {
@@ -20,26 +25,32 @@ public class Slingshot : MonoBehaviour
         launchPoint = launchPointTrans.gameObject;
         launchPoint.SetActive(false);
         launchPos = launchPointTrans.position;
+
+        birdQueue = GetComponent<DroppingBirds>().birdQueue;
+    }
+
+    private void Start()
+    {
+        UpdateQueue();
     }
 
     void OnMouseEnter()
     {
-        //print ("Enter");
         launchPoint.SetActive(true);
     }
 
     void OnMouseExit()
     {
-        //print ("Exit");
         if (!aimingMode)
             launchPoint.SetActive(false);
     }
 
     void OnMouseDown()
     {
-        //print ("Down");
-
         // Player pressed mouse while over Slingshot
+        if (birds.Count == 0)
+            return;
+
         aimingMode = true;
 
         if (SceneInformation.Instance.currentProjectile)
@@ -48,7 +59,22 @@ public class Slingshot : MonoBehaviour
         }
 
         // Instantiate a projectile
-        projectile = Instantiate(prefabProjectile) as GameObject;
+        projectile = Instantiate(birds[0]) as GameObject;
+        SceneInformation.Instance.allObjects.Add(projectile);
+
+        //Destroy the placeholder launchpoint bird
+        Destroy(queueBirds[0]);
+        SceneInformation.Instance.allObjects.Remove(queueBirds[0]);
+        queueBirds[0] = null;
+
+        //////////////////////////////////////////////////////////////////
+        //Manipulate the projectile
+        Transform tmpLineRend = Instantiate(lineRendererPrefab).transform;
+        tmpLineRend.SetParent(projectile.transform);
+        tmpLineRend.localPosition = Vector3.zero;
+
+        SceneInformation.Instance.lastFireSlingshot = transform;
+        //////////////////////////////////////////////////////////////////
 
         // Start it at launch position
         projectile.transform.position = launchPos;
@@ -61,6 +87,7 @@ public class Slingshot : MonoBehaviour
     {
         // If the Slingshot is not in aiming mode, don't run this code
         if (!aimingMode) return;
+
 
         // Get the current mouse position in 2D screen coordinates
         Vector3 mousePos = Input.mousePosition;
@@ -80,6 +107,9 @@ public class Slingshot : MonoBehaviour
 
         if (Input.GetMouseButtonUp(0))
         {
+            //We remove the bird from both the global and the local list
+            SceneInformation.Instance.birds.Remove(birds[0]);
+            birds.RemoveAt(0);
             //If there is a line renderer in the scene, delete it
             if (SceneInformation.Instance.currentLineRenderer)
             {
@@ -93,13 +123,58 @@ public class Slingshot : MonoBehaviour
             projectile.GetComponent<Rigidbody2D>().isKinematic = false;
             projectile.GetComponent<Rigidbody2D>().velocity = -mouseDelta * velocityMult;
 
-            SceneInformation.Instance.allObjects.Add(projectile);
             SceneInformation.Instance.currentProjectile = projectile.GetComponent<Rigidbody2D>();
             SceneInformation.Instance.currentLineRenderer = projectile.GetComponentInChildren<LineRenderer>();
 
             // Set the reference to the projectile to null as early as possible
             projectile = null;
+
+            UpdateQueue();
+        }
+    }
+
+    private void UpdateQueue()
+    {
+        for (int i = 0; i < queueBirds.Length; i++)
+        {
+            SceneInformation.Instance.allObjects.Remove(queueBirds[i]);
+
+            if (queueBirds[i] != null)
+            {
+                Destroy(queueBirds[i]);
+            }
         }
 
+        queueBirds = new GameObject[birds.Count];
+
+        if (queueBirds.Length > 0)
+        {
+            queueBirds[0] = new GameObject("LaunchPointBird");
+            queueBirds[0].transform.position = launchPoint.transform.position;
+            SpriteRenderer tmpRenderer = queueBirds[0].AddComponent<SpriteRenderer>();
+            tmpRenderer.sprite = birds[0].GetComponent<BirdInfo>().eyesOpen;
+            tmpRenderer.sortingOrder = 1;
+
+            //Add it to the sceneObjects so it gets deleted when the player wins
+            SceneInformation.Instance.allObjects.Add(queueBirds[0]);
+
+            //Now that we added the special position of the first bird we generically adjust the other ones if there are any
+            for (int i = 1; i < birds.Count; i++)
+            {
+                queueBirds[i] = new GameObject("QueueBird Nr. " + (i + 1));
+                SpriteRenderer tmpRend = queueBirds[i].AddComponent<SpriteRenderer>();
+                tmpRend.sprite = birds[i].GetComponent<BirdInfo>().eyesOpen;
+                tmpRend.sortingOrder = 1;
+
+                queueBirds[i].transform.position = birdQueue.position + new Vector3(0, tmpRend.bounds.extents.y, 0);
+                if (i > 1)
+                {
+                    float prevBoundsX = queueBirds[i - 1].GetComponent<SpriteRenderer>().bounds.extents.x;
+                    queueBirds[i].transform.position = new Vector3((queueBirds[i - 1].transform.position.x) -prevBoundsX * 1.5f - tmpRend.bounds.extents.x, tmpRend.bounds.extents.y * 0.67f, 0);
+                }
+
+                SceneInformation.Instance.allObjects.Add(queueBirds[i]);
+            }
+        }
     }
 }
