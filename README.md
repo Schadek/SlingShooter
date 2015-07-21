@@ -1,5 +1,5 @@
 # SlingShooter
-Created with: Unity 5.1f
+Created with: Unity 5.1.2f1
 
 How to open the project:\n 
 1. Create a new, clean project \n 
